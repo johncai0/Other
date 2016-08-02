@@ -1,0 +1,146 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <strings.h>
+#include <sys/inotify.h>
+#include <errno.h>
+#define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX +1))
+#define MAX_LINE 4096
+#define MAX_FILE 1024
+int filenum;
+typedef struct myfile {
+	int wd;
+	int type;
+	char name[4096];
+	FILE *fp;
+} fn;
+struct myfile filelist[MAX_FILE];
+int inotifyFd;
+void sploop()
+{
+	int i;
+	printf("\n\nsploop:\n");
+	for (i=0;i<filenum; i++) {
+		printf("name: [%s]\tlist: [%d]\twd: [%d]\tTotal:[%d]\n",filelist[i].name,i,filelist[i].wd,filenum);
+	}
+	printf("sploopEND\n\n\n");
+}
+void my_getline(struct myfile file) {
+	char line[MAX_LINE];
+	while (fgets(line,MAX_LINE, file.fp) != NULL) {
+		printf("%s:%s",file.name,line);
+	}
+}
+
+void my_die(struct inotify_event *i)
+{
+	int x,y=0,wd;
+	char filepath[1024];
+	if (i->mask & IN_DELETE) {
+		for (x=0; x<filenum; x++) {
+			if (filelist[x].wd == i->wd) {
+				sprintf(filepath,"%s%s",filelist[x].name,i->name);
+				break;
+			}
+		}
+		for (y=0; y<filenum; y++) {
+			if (strcmp(filelist[y].name,filepath) == 0) {
+				printf("DELETE filename=[%s] path=[%s] wd=[%d] list=[%d]\n",filelist[y].name,filepath,filelist[y].wd,y);
+				if (inotify_rm_watch(inotifyFd, filelist[y].wd) != 0)
+                                        printf("ERROR: [rm %d] %s\n",i->wd,strerror(errno));
+                                else
+                                        printf("wd %d be removed!\n",filelist[y].wd);
+				break;
+			}
+		}
+		x=y;
+		while (x < filenum) {
+			filelist[x].wd = filelist[x+1].wd;
+			filelist[x].fp = filelist[x+1].fp;
+			strcpy(filelist[x].name, filelist[x+1].name);
+			x++;
+		}
+		filenum--;
+		//sploop();
+	} 
+	if (i->mask & IN_CREATE) {
+addfile:
+		memset(filepath, '\0', 1024);
+		for (x=0;x<filenum;x++) {
+			if (i->wd == filelist[x].wd) {
+				sprintf(filepath,"%s%s",filelist[x].name,i->name);
+				break;
+			}
+		}
+		if ((wd = inotify_add_watch(inotifyFd,filepath,IN_MODIFY|IN_CREATE|IN_DELETE)) == -1) {
+                        printf("inotify_add_watch ERROR!\n");
+                        exit(-2);
+                }
+                printf("wd = [%d]: %s\n", wd, filepath);
+                filelist[filenum].wd = wd;
+                strcpy(filelist[filenum].name,filepath);
+                filelist[filenum].fp=fopen(filepath,"r");
+                if (filelist[filenum].fp == NULL)
+                        printf("open file %s error [%s]\n",filepath,strerror(errno));
+                my_getline(filelist[filenum]);
+		filenum++;
+		//sploop();
+	} 
+	if (i->mask & IN_MODIFY) {
+		for (x=0; x<filenum; x++) {
+			if (strcmp(strstr(filelist[x].name,"/") +1,i->name) ==0) {
+				my_getline(filelist[x]);
+				break;
+			}
+		}
+		if (x == filenum) {
+			goto addfile;
+		}
+	}
+}
+
+int main(int argc, char **argv)
+{
+	int wd,j;
+	char buf[BUF_LEN];
+	ssize_t numRead;
+	char *p;
+	struct inotify_event *event;
+	filenum = argc-1;
+	if (argc < 2 || strcmp(argv[1], "--help") == 0)
+		printf("show this help messages!\n");
+	if ((inotifyFd = inotify_init()) == -1) {
+                printf("inotify_init ERROR!\n");
+                exit(-1);
+        }
+	for (j = 0; j < filenum; j++) {
+                if ((wd = inotify_add_watch(inotifyFd,argv[j+1],IN_MODIFY|IN_CREATE|IN_DELETE)) == -1) {
+                        printf("inotify_add_watch ERROR!\n");
+                        exit(-2);
+                }
+		printf("wd = [%d]: %s\n", wd, argv[j+1]);
+                filelist[j].wd = wd;
+                filelist[j].type = 0;
+                strcpy(filelist[j].name,argv[j+1]);
+                filelist[j].fp=fopen(argv[j+1],"r");
+                if (filelist[j].fp == NULL)
+                        printf("open file %s error [%s]\n",argv[j+1],strerror(errno));
+                my_getline(filelist[j]);
+        }
+	for (;;) {
+		if ((numRead = read(inotifyFd,buf,BUF_LEN)) == 0) 
+			printf("read from inotify fd return 0!\n");
+		if (numRead == -1) {
+			printf("read from inotify fd ERROR!\n");
+			return -3;
+		}
+		for (p = buf; p<buf+numRead;) {
+			event = (struct inotify_event *)p;
+			my_die(event);
+			p += sizeof(struct inotify_event) + event->len;
+		}
+	}
+	return 0;
+}

@@ -1,0 +1,192 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <strings.h>
+#include <sys/inotify.h>
+#include <errno.h>
+#include <time.h>
+#define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX +1))
+#define MAX_LINE 4096
+#define MAX_FILE 1024
+int filenum;
+typedef struct myfile {
+	int wd;
+	int type;
+	char name[4096];
+	FILE *fp;
+} fn;
+struct myfile filelist[MAX_FILE];
+int inotifyFd;
+void sploop(char *a)
+{
+	int i;
+	printf("\n\nsploop: %s\n",a);
+	for (i=0;i<filenum; i++) {
+		printf("name: [%s]\t\tlist: [%d]\t\twd: [%d]\t\ttype: [%d]\t\tTotal:[%d]\n",
+			filelist[i].name,i,filelist[i].wd,filelist[i].type,filenum);
+	}
+	printf("sploop: %s END\n\n\n",a);
+}
+void gettm(char *stm)
+{
+	time_t mytm;
+	struct tm *tminfo;
+	time(&mytm);
+	tminfo = localtime(&mytm);
+	tminfo->tm_year += 1900;
+	tminfo->tm_mon++;
+	sprintf(stm,"\t\"datetime\":\"%d-%02d-%02d %02d:%02d:%02d\",\n\t\"timestmap\":\"%d\"",
+		tminfo->tm_year,tminfo->tm_mon,tminfo->tm_mday,tminfo->tm_hour,tminfo->tm_min,tminfo->tm_sec,mytm);
+}
+// no userd by findname()
+char *findname(char *s, char *sech) {
+	char *p = s,*d = NULL;
+	size_t len = strlen(sech);
+	for (; (p=strchr(p,*sech))!=0;p++) {
+		if(strncmp(p,sech,len)==0)
+			d = p;
+	}
+	return d;
+}
+void my_getline(struct myfile file) {
+	char line[MAX_LINE];
+	char content[MAX_LINE];
+	char tim[54];
+	while (fgets(line,MAX_LINE, file.fp) != NULL) {
+		line[strlen(line)-1]='\0';
+		gettm(tim);
+		sprintf(content,"{\n\t\"filename\":\"%s\",\n%s,\n\t\"content\":\"%s\"\n}\n",file.name,tim,line);
+		printf("%s",content);
+	}
+}
+
+void my_die(struct inotify_event *i)
+{
+	int x,y=0,wd,stat=0;
+	char filepath[1024];
+	memset(filepath, '\0', 1024);
+	if (i->mask & IN_DELETE||i->mask & IN_MOVED_FROM) {
+		//sploop("delete start");
+		for (x=0; x<filenum; x++) {
+			if (filelist[x].wd == i->wd) {
+				sprintf(filepath,"%s%s",filelist[x].name,i->name);
+				break;
+			}
+		}
+		for (y=0; y<filenum; y++) {
+			if (strcmp(filelist[y].name,filepath) == 0 && filelist[y].type != 0) {
+				printf("DELETE filename=[%s] path=[%s] wd=[%d] list=[%d]\n",
+						filelist[y].name,filepath,filelist[y].wd,y);
+				if (inotify_rm_watch(inotifyFd, filelist[y].wd) != 0)
+                                        printf("ERROR: [rm %d] %s\n",i->wd,strerror(errno));
+                                else
+                                        printf("wd %d be removed!\n",filelist[y].wd);
+				fclose(filelist[y].fp);
+				for (x=y; x < filenum; x++) {
+                                	filelist[x].wd = filelist[x+1].wd;
+                                	filelist[x].fp = filelist[x+1].fp;
+                                	strcpy(filelist[x].name, filelist[x+1].name);
+                        	}
+				filenum--;
+				printf("in for y = %d\n",y);
+				break;
+			}
+		}
+		//sploop("delete stop");
+	} 
+	if (i->mask & IN_CREATE) {
+addfile:
+		//sploop("create start");
+		for (x=0;x<filenum;x++) {
+			if (i->wd == filelist[x].wd) {
+				sprintf(filepath,"%s%s",filelist[x].name,i->name);
+				break;
+			}
+		}
+		for (x=0;x<filenum;x++) {
+			if (strcmp(filepath,filelist[x].name) == 0) {
+				my_getline(filelist[x]);
+                                return;
+                        }
+		}
+		if ((wd = inotify_add_watch(inotifyFd,filepath,IN_MODIFY)) == -1) {
+                        printf("inotify_add_watch ERROR: [%s][%s] !\n",strerror(errno),filepath);
+                        exit(-2);
+                }
+                printf("ADD file wd = [%d]: %s\n", wd, filepath);
+                filelist[filenum].wd = wd;
+                filelist[filenum].type = 1;
+                strcpy(filelist[filenum].name,filepath);
+                filelist[filenum].fp=fopen(filepath,"r");
+                if (filelist[filenum].fp == NULL) 
+                        printf("open file %s error [%s]\n",filepath,strerror(errno));
+                my_getline(filelist[filenum]);
+		filenum++;
+		//sploop("create end");
+	} 
+	if (i->mask & IN_MODIFY) {
+		for (x=0; x<filenum; x++) {
+			if (filelist[x].wd == i->wd && filelist[x].type == 1) {
+				my_getline(filelist[x]);
+				stat = 1;
+				break;
+			} 
+			else if (strcmp(filelist[x].name,filepath) == 0 && filelist[x].type == 1) {
+				my_getline(filelist[x]);
+				stat = 1;
+                                break;
+			} 
+		}
+		if (stat == 0) {
+			goto addfile;
+		}
+	}
+}
+
+int main(int argc, char **argv)
+{
+	int wd,j;
+	char buf[BUF_LEN];
+	ssize_t numRead;
+	char *p;
+	struct inotify_event *event;
+	filenum = argc-1;
+	if (argc < 2 || strcmp(argv[1], "--help") == 0) {
+		printf("show this help messages!\n");
+		return -1;
+	}
+	if ((inotifyFd = inotify_init()) == -1) {
+                printf("inotify_init ERROR!\n");
+                exit(-1);
+        }
+	for (j = 0; j < filenum; j++) {
+                if ((wd = inotify_add_watch(inotifyFd,argv[j+1],IN_MODIFY|IN_DELETE|IN_MOVED_FROM)) == -1) {
+                        printf("inotify_add_watch ERROR!\n");
+                        exit(-2);
+                }
+		//printf("wd = [%d]: %s\n", wd, argv[j+1]);
+                filelist[j].wd = wd;
+                filelist[j].type = 0;
+                strcpy(filelist[j].name,argv[j+1]);
+                filelist[j].fp=fopen(argv[j+1],"r");
+                if (filelist[j].fp == NULL)
+                        printf("open file %s error [%s]\n",argv[j+1],strerror(errno));
+                my_getline(filelist[j]);
+        }
+	for (;;) {
+		if ((numRead = read(inotifyFd,buf,BUF_LEN)) == 0) 
+			printf("read from inotify fd return 0!\n");
+		if (numRead == -1) {
+			printf("read from inotify fd ERROR!\n");
+			return -3;
+		}
+		for (p = buf; p<buf+numRead;) {
+			event = (struct inotify_event *)p;
+			my_die(event);
+			p += sizeof(struct inotify_event) + event->len;
+		}
+	}
+	return 0;
+}

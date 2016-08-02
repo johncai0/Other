@@ -1,0 +1,71 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+BACKLOG	tmp/c/temp/bbb.c	12;"	d	file:
+BIN	tmp/c/Makefile	/^BIN=.\/bin$/;"	m
+BIN_DIR	Makefile	/^BIN_DIR=.\/bin$/;"	m
+BUF_SIZE	tmp/c/temp/bbb.c	13;"	d	file:
+IPADDR	tmp/c/src/select.c	14;"	d	file:
+IPADDRESS	tmp/c/src/client.c	13;"	d	file:
+LISTENQ	tmp/c/src/select.c	17;"	d	file:
+MAXLINE	tmp/c/src/client.c	12;"	d	file:
+MAXLINE	tmp/c/src/select.c	16;"	d	file:
+MAX_CONN	src/server.h	13;"	d
+MAX_QUE	src/server.h	12;"	d
+MYPORT	tmp/c/temp/bbb.c	11;"	d	file:
+PORT	tmp/c/src/select.c	15;"	d	file:
+SERV_PORT	tmp/c/src/client.c	14;"	d	file:
+SIZE	tmp/c/src/select.c	18;"	d	file:
+SRC	tmp/c/Makefile	/^SRC=.\/src$/;"	m
+SRC_DIR	Makefile	/^SRC_DIR=.\/src$/;"	m
+accept_client_proc	tmp/c/src/select.c	/^static int accept_client_proc(int srvfd)$/;"	f	file:
+allfds	tmp/c/src/select.c	/^	fd_set allfds;      \/*句柄集合*\/$/;"	m	struct:server_context_st	file:
+bin_print	tmp/aaa.c	/^void bin_print(int n)$/;"	f
+cai_bind	tmp/my_epoll.c	/^int cai_bind(char *ip, int port)$/;"	f
+cli_cnt	tmp/c/src/select.c	/^	int cli_cnt;        \/*客户端个数*\/$/;"	m	struct:server_context_st	file:
+clifds	tmp/c/src/select.c	/^	int clifds[SIZE];   \/*客户端的个数*\/$/;"	m	struct:server_context_st	file:
+conn_amount	tmp/c/temp/bbb.c	/^int conn_amount;    \/\/ current connection amount$/;"	v
+create_server_proc	tmp/c/src/select.c	/^static int create_server_proc(const char* ip,int port)$/;"	f	file:
+fd_A	tmp/c/temp/bbb.c	/^int fd_A[BACKLOG];    \/\/ accepted connection fd$/;"	v
+fds	src/server.h	/^int fds[MAX_CONN];$/;"	v
+getnow	tmp/c/src/test.c	/^char *getnow()$/;"	f
+handle_client_msg	tmp/c/src/select.c	/^static int handle_client_msg(int fd, char *buf) $/;"	f	file:
+handle_client_proc	tmp/c/src/select.c	/^static void handle_client_proc(int srvfd)$/;"	f	file:
+handle_connection	tmp/c/src/client.c	/^static void handle_connection(int sockfd)$/;"	f	file:
+handle_recv_msg	tmp/c/src/client.c	/^static void handle_recv_msg(int sockfd, char *buf) $/;"	f	file:
+init_conn	src/connect.c	/^void init_conn(void)$/;"	f
+lg_network_bind	tmp/epoll.c	/^int lg_network_bind(char *address, int port)$/;"	f
+lg_network_epoll	tmp/epoll.c	/^int lg_network_epoll(int epfd, struct epoll_event *event_pool)$/;"	f
+lg_network_recv	tmp/epoll.c	/^void lg_network_recv(int epfd, int sockfd)$/;"	f
+listenfd	tmp/epoll.c	/^int listenfd = -1;$/;"	v
+loop	src/server.c	/^void loop(int serfd) $/;"	f
+main	src/hello.c	/^int main(int argc, char **argv) {$/;"	f
+main	src/server.c	/^int main(int argc, char **argv)$/;"	f
+main	tmp/aaa.c	/^void main(void)$/;"	f
+main	tmp/c/src/client.c	/^int main(int argc,char *argv[])$/;"	f
+main	tmp/c/src/select.c	/^int main(int argc,char *argv[])$/;"	f
+main	tmp/c/src/test.c	/^int main(int argc, char **argv) $/;"	f
+main	tmp/c/temp/aaa.c	/^int main(int argc, char **argv)$/;"	f
+main	tmp/c/temp/bbb.c	/^int main(void)$/;"	f
+main	tmp/c/temp/outmem.c	/^int main (int argc,char **argv)$/;"	f
+main	tmp/epoll.c	/^int main()$/;"	f
+main	tmp/my_epoll.c	/^int main(void)$/;"	f
+max	tmp/c/src/client.c	16;"	d	file:
+maxfd	tmp/c/src/select.c	/^	int maxfd;          \/*句柄最大值*\/$/;"	m	struct:server_context_st	file:
+my_recv	tmp/my_epoll.c	/^void my_recv(int epfd, int sockfd, int listenfd)$/;"	f
+printerrhtml	tmp/c/src/test.c	/^char *printerrhtml()$/;"	f
+printhtml	tmp/c/src/test.c	/^char *printhtml()$/;"	f
+recv_client_msg	tmp/c/src/select.c	/^static void recv_client_msg(fd_set *readfds)$/;"	f	file:
+s_srv_ctx	tmp/c/src/select.c	/^static server_context_st *s_srv_ctx = NULL;$/;"	v	file:
+server_context_st	tmp/c/src/select.c	/^typedef struct server_context_st$/;"	s	file:
+server_context_st	tmp/c/src/select.c	/^} server_context_st;$/;"	t	typeref:struct:server_context_st	file:
+server_init	tmp/c/src/select.c	/^static int server_init()$/;"	f	file:
+server_uninit	tmp/c/src/select.c	/^static void server_uninit()$/;"	f	file:
+showclient	tmp/c/temp/bbb.c	/^void showclient()$/;"	f
+sock_add	src/server.c	/^int sock_add(void)$/;"	f
+sock_bind	src/server.c	/^void sock_bind(int fd, int port, char *ip)$/;"	f
+strtime	tmp/c/src/test.c	/^char strtime[64];$/;"	v
+writelog	tmp/c/src/test.c	/^int writelog(char *str,char *filepath) {$/;"	f
