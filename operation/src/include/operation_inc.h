@@ -1,3 +1,8 @@
+//epoll event pool size
+#define EPS 102400
+#define BUFFSIZE 1024
+#define LISTENBACKLOG 100
+
 //bind ip:port to this server
 //ok socket returned, error return -1
 int ser_bind(char *ip, int port);
@@ -10,5 +15,6 @@ void help();
 //ok epoll fd returned, error return -1
 int epoll_fd_create(int serfd);
 
-//epoll event pool size
-#define EPS 1024
+//loop comming connection
+//void
+void body_loop(int epfd,int listenfd,struct epoll_event event_pool[EPS]);

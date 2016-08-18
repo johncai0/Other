@@ -17,8 +17,9 @@ int main(int argc, char **argv)
 		fprintf(stderr,"epoll_fd_create ERROR!\n");
 		return -1;
 	}
+	struct epoll_event event_pool[EPS];
 	while(1) {
-		body_loop();
+		body_loop(epfd,serfd,event_pool);
 	}
 	return 0;
 }

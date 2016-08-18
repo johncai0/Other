@@ -15,3 +15,6 @@
 //exit
 #include <unistd.h>
 #include <stdlib.h> //atoi
+
+//epoll
+#include <sys/epoll.h>

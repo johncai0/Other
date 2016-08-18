@@ -25,7 +25,7 @@ int ser_bind(char *ip, int port){
 		fprintf(stderr,"ser_bind.bind[ERROR]: %s!\n",strerror(errno));
 		exit(-1);
 	}
-	if (listen(sock,100) == -1) {
+	if (listen(sock,LISTENBACKLOG) == -1) {
 		close(sock);
 		fprintf(stderr,"ser_bind.listen[ERROR]: %s!\n", strerror(errno));
 		exit(-1);
