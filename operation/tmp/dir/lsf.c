@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -23,10 +24,9 @@ int isdir(char *path)
 void prtf(char *path) {
 	DIR *dir;
 	struct dirent *ptr;
-	char buf[4096];
-	//bzero(buf,4096);
+	char buf[4096]={0};
 	dir = opendir(path);
-	while ((ptr  = readdir(dir)) != NULL) {
+	while ((ptr  = readdir(dir)) != NULL && fprintf(stderr,"prtf.readdir[ERROR]: %s!\n",strerror(errno))) {
 		if (strstart(ptr->d_name,".")&strstart(ptr->d_name,"..")) {
 			if (isdir(ptr->d_name)) {
 				sprintf(buf,"%s/%s",path,ptr->d_name);
@@ -35,7 +35,7 @@ void prtf(char *path) {
 			}
 			else {
 				sprintf(buf,"%s/%s",path,ptr->d_name);
-				printf("d_name: %s\n",buf);
+				printf("%s\n",buf);
 			}
 		}
 	}
