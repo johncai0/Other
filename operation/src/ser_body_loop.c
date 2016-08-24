@@ -20,7 +20,8 @@ void my_recv(int epfd, int sockfd, int listenfd)
 		char buffer[BUFFSIZE];
 		bzero(buffer,BUFFSIZE);
 		int size = read(sockfd, buffer, BUFFSIZE);
-		write(1, buffer, size);
+		//write(1, buffer, size);
+		printf("%s\n",buffer);
 		write(sockfd, html, strlen(html));
 		epoll_ctl(epfd, EPOLL_CTL_DEL, sockfd, NULL);
 		close(sockfd);

@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <string.h>
-#include <dirent.h>
+#include "include/os_inc.h"
+#include "include/operation_inc.h"
 int strstart(const char *src,const char *des) {
         if (strstr(src,des) == src && strlen(src) == strlen(des))
                 return 0;

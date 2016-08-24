@@ -21,10 +21,18 @@ int epoll_fd_create(int serfd);
 void body_loop(int epfd,int listenfd,struct epoll_event event_pool[EPS]); 
 
 //string is eq
-int strstart(const char *src,const char *des) 
+int strstart(const char *src,const char *des);
 
 //scandir
-int scdirect(char *path) 
+int scdirect(char *path);
 
 //scanfile
-int prtf(char *path) 
+int prtf(char *path); 
+
+//connect to server
+//error return -1, ok return socketfd
+int connect_ser(char *ip, int port);
+
+//filter config comm
+//ok return 0, error return -1
+int cmdfilter(char *conf, int socketfd);
