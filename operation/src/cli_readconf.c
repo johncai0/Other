@@ -23,10 +23,11 @@ int readconf(char *path) {
 	while (getlen(conf,buffer) != 0) {
 		num++;
 		fprintf(stdout,"%s\n",buffer);
-		if (cmdfilter(buffer,sockfd) != 0) {
+		if (cmdfilter(buffer,&sockfd) != 0) {
 			fprintf(stderr,"config commond error in %d line!\n",num);
 			return -1;
 		}
+		//fprintf(stdout,"sockfd == %d\n", sockfd);
 	}
 	return 0;
 }

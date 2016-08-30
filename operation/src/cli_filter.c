@@ -1,14 +1,5 @@
 #include "include/os_inc.h"
 #include "include/operation_inc.h"
-#define HOST	"host:"
-#define HOME	"home:"
-#define RCMD	"rcmd:"
-#define ADDF	"addf:"
-#define ADDD	"addd:"
-#define COVF	"covf:"
-#define COVD	"covd:"
-#define DELF	"delf:"
-#define DELD	"deld:"
 int strbgen_eq(char *src, char *des) {
 	if (strstr(src,des) != src)
 		return -1;
@@ -31,16 +22,26 @@ int myconnect(char *conf) {
 	}
 	return sockfd;
 }
-int cmdfilter(char *conf,int sockfd) {
+void close_conn(int fd)
+{
+        fprintf(stdout,"close connection %d \n",fd);
+        shutdown(fd,SHUT_RDWR);
+        close(fd);
+}
+int cmdfilter(char *conf,int *sockfd) {
+	char buffer[BUFFSIZE]={0};
 	if (!strbgen_eq(conf,HOST)) {
-		fprintf(stdout,"connect to server!\n");
-		if ((sockfd=myconnect(conf)) == -1) {
+		if ((*sockfd=myconnect(conf)) == -1) {
 			fprintf(stderr,"config cmd %s run error.\n",conf);
 			return -1;
 		}
+		fprintf(stdout,"connect to server sockfd = %d!\n",*sockfd);
 		return 0;
 	} else if (!strbgen_eq(conf,HOME)) {
-		fprintf(stdout,"get home path\n");
+		fprintf(stdout,"sockfd = %d\n",*sockfd);
+		write(*sockfd, conf, strlen(conf));
+		read(*sockfd, buffer, BUFFSIZE);
+		fprintf(stdout,"send home path,recv status %s\n",buffer);
 		return 0;
 	} else if (!strbgen_eq(conf,RCMD)) {
 		fprintf(stdout,"run commond!\n");
@@ -49,7 +50,10 @@ int cmdfilter(char *conf,int sockfd) {
 		fprintf(stdout,"server add file\n");
 		return 0;
 	} else if (!strbgen_eq(conf,ADDD)) {
-		fprintf(stdout,"server add directory\n");
+		fprintf(stdout,"sockfd = %d\n",*sockfd);
+		write(*sockfd, conf, strlen(conf));
+		read(*sockfd, buffer, BUFFSIZE);
+		fprintf(stdout,"server add directory %s\n",buffer);
 		return 0;
 	} else if (!strbgen_eq(conf,COVF)) {
 		fprintf(stdout,"server cover file\n");

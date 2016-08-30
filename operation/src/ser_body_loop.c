@@ -1,9 +1,15 @@
 #include "include/os_inc.h"
 #include "include/operation_inc.h"
-
+void close_conn(int fd)
+{
+	fprintf(stdout,"close connection %d \n",fd);
+	shutdown(fd,SHUT_RDWR);
+	close(fd);
+}
 void my_recv(int epfd, int sockfd, int listenfd)
 {
-	char *html="HTTP/1.1 200 OK\r\n\r\n<h1>Hello Word!!!</h1>";
+	//char *html="HTTP/1.1 200 OK\r\n\r\n<h1>Hello Word!!!</h1>";
+	char *html=DONE;
 	struct sockaddr_in cliaddr;
 	int sockaddr_len = sizeof(struct sockaddr_in);
 	bzero(&cliaddr,sockaddr_len);
@@ -19,12 +25,16 @@ void my_recv(int epfd, int sockfd, int listenfd)
 	} else {
 		char buffer[BUFFSIZE];
 		bzero(buffer,BUFFSIZE);
-		int size = read(sockfd, buffer, BUFFSIZE);
-		//write(1, buffer, size);
-		printf("%s\n",buffer);
-		write(sockfd, html, strlen(html));
-		epoll_ctl(epfd, EPOLL_CTL_DEL, sockfd, NULL);
-		close(sockfd);
+		if (!read(sockfd, buffer, BUFFSIZE) < 1) {
+			ser_cmdfilter(buffer,&sockfd);
+			/*if (strlen(buffer) > 0 && write(sockfd, html, strlen(html)) == strlen(html)) {
+				fprintf(stdout,"send Ok\n");
+			} else {
+				fprintf(stderr,"send to client Error [socket %s]!\n",strerror(errno));
+				epoll_ctl(epfd, EPOLL_CTL_DEL, sockfd, NULL);
+				close_conn(sockfd);
+			}*/
+		}
 	}
 }
 

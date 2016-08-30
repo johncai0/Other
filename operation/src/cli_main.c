@@ -6,7 +6,7 @@ void cli_help() {
 	fprintf(stdout,"\t/path/to/cli /path/to/upload.conf\n");
 }
 int main(int argc, char **argv) {
-	if (argc < 1) {
+	if (argc < 2) {
 		cli_help();
 		return -1;
 	}
